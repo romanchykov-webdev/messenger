@@ -8,6 +8,7 @@ import {hp, wp} from "../helpers/common";
 import InputCustom from "../components/InputCustom";
 import ButtonCustom from "../components/ButtonCustom";
 import {useRouter} from "expo-router";
+import {supabase} from "../lib/supabase";
 
 const Login = () => {
 
@@ -26,7 +27,21 @@ const Login = () => {
         }
 
         //     good to go
+        let email = emailRef.current.trim();
+        let password = passwordRef.current.trim();
 
+        setLoading(true)
+
+        const {error} = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        })
+        setLoading(false)
+
+        console.log('error',error);
+        if(error){
+            Alert.alert('Login', error.message);
+        }
 
     }
 
