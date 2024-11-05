@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {StatusBar} from "expo-status-bar";
 
@@ -9,12 +9,18 @@ const ScreenWrapper = ({children, bg}) => {
     const paddingTop = top > 0 ? top + 5 : 30;
 
     return (
-        <View style={{flex: 1, paddingTop, backgroundColor: bg}}>
+        <ScrollView
+            contentContainerStyle={{flex: 1, paddingTop, backgroundColor: bg}}
+            keyboardDismissMode='on-drag'
+        >
+        {/*<View style={{flex: 1, paddingTop, backgroundColor: bg}}>*/}
             <StatusBar style="dark"/>
+
             {
                 children
             }
-        </View>
+        {/*</View>*/}
+        </ScrollView>
     );
 };
 

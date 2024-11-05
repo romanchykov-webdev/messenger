@@ -1,5 +1,5 @@
 import React, {useRef, useState} from 'react';
-import {View, Text, StyleSheet, Pressable, Alert} from 'react-native';
+import {View, Text, StyleSheet, Pressable, Alert, ScrollView} from 'react-native';
 import ScreenWrapper from "../components/ScreenWrapper";
 import {theme} from "../constants/theme";
 import Icon from "../assets/icons";
@@ -8,6 +8,7 @@ import {hp, wp} from "../helpers/common";
 import InputCustom from "../components/InputCustom";
 import ButtonCustom from "../components/ButtonCustom";
 import {useRouter} from "expo-router";
+import {supabase} from "../lib/supabase";
 
 const SignUp = () => {
 
@@ -27,80 +28,105 @@ const SignUp = () => {
         }
 
         //     good to go
+        let name = nameRef.current.trim();
+        let email = emailRef.current.trim();
+        let password = passwordRef.current.trim();
 
+        setLoading(true)
+
+        const {data: {session}, error} = await supabase.auth.signUp({
+            email,
+            password,
+            options:{
+                data:{
+                    name
+                }
+            }
+        })
+        setLoading(false)
+
+        // console.log('session', session)
+        // console.log('error', error)
+
+        // if error
+        if(error){
+            Alert.alert('Sign Up', error.message)
+        }
 
     }
 
     return (
         <ScreenWrapper bg='white'>
-            <View style={styles.container}>
 
-                {/*    button back*/}
-                <BackButton/>
+                <View style={styles.container}>
 
-                {/*welcome text*/}
-                <View>
-                    <Text style={styles.welcomeText}>Let`s</Text>
-                    <Text style={styles.welcomeText}>Get Started</Text>
-                </View>
+                    {/*    button back*/}
+                    <BackButton/>
 
-                {/*form*/}
-                <View style={styles.form}>
-                    <Text style={{fontSize: hp(1.5), color: theme.colors.text}}>
-                        Please fill the details to create an account.
-                    </Text>
+                    {/*welcome text*/}
+                    <View>
+                        <Text style={styles.welcomeText}>Let`s</Text>
+                        <Text style={styles.welcomeText}>Get Started</Text>
+                    </View>
 
-                    {/*input Username*/}
-                    <InputCustom
-                        icon={<Icon name="user" size={26} strokeWidth={1.6}/>}
-                        placeholder='Enter your name'
-                        onChangeText={value => nameRef.current = value}
-                    />
-
-                    {/*input email*/}
-                    <InputCustom
-                        icon={<Icon name="mail" size={26} strokeWidth={1.6}/>}
-                        placeholder='Enter your email'
-                        onChangeText={value => emailRef.current = value}
-                    />
-
-                    {/*input password*/}
-                    <InputCustom
-                        icon={<Icon name="lock" size={26} strokeWidth={1.6}/>}
-                        secureTextEntry
-                        placeholder='Enter your password'
-                        onChangeText={value => passwordRef.current = value}
-                    />
-
-
-
-                    {/*    button un submit*/}
-                    <ButtonCustom
-                        title="Sign Up"
-                        onPress={onSubmit}
-                        loading={loading}
-                    />
-                </View>
-
-                {/*    footer   */}
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>
-                        Already have an account?
-                    </Text>
-
-                    <Pressable>
-                        <Text
-                            onPress={() => router.push('login')}
-                            style={[styles.footerText, {
-                                color: theme.colors.primaryDark,
-                                fontWeight: theme.fonts.semibold
-                            }]}>
-                            Login
+                    {/*form*/}
+                    <View style={styles.form}>
+                        <Text style={{fontSize: hp(1.5), color: theme.colors.text}}>
+                            Please fill the details to create an account.
                         </Text>
-                    </Pressable>
 
+                        {/*input Username*/}
+                        <InputCustom
+                            icon={<Icon name="user" size={26} strokeWidth={1.6}/>}
+                            placeholder='Enter your name'
+                            onChangeText={value => nameRef.current = value}
+                        />
+
+                        {/*input email*/}
+                        <InputCustom
+                            icon={<Icon name="mail" size={26} strokeWidth={1.6}/>}
+                            placeholder='Enter your email'
+                            onChangeText={value => emailRef.current = value}
+                        />
+
+                        {/*input password*/}
+                        <InputCustom
+                            icon={<Icon name="lock" size={26} strokeWidth={1.6}/>}
+                            secureTextEntry
+                            placeholder='Enter your password'
+                            onChangeText={value => passwordRef.current = value}
+                        />
+
+
+                        {/*    button un submit*/}
+                        <ButtonCustom
+                            title="Sign Up"
+                            onPress={onSubmit}
+                            loading={loading}
+                        />
+                    </View>
+
+                    {/*    footer   */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>
+                            Already have an account?
+                        </Text>
+
+                        <Pressable>
+                            <Text
+                                onPress={() => router.push('login')}
+                                style={[styles.footerText, {
+                                    color: theme.colors.primaryDark,
+                                    fontWeight: theme.fonts.semibold
+                                }]}>
+                                Login
+                            </Text>
+                        </Pressable>
+
+                    </View>
                 </View>
-            </View>
+
+
         </ScreenWrapper>
     );
 };
