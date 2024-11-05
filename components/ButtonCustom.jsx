@@ -4,7 +4,7 @@ import {theme} from "../constants/theme";
 import {hp} from "../helpers/common";
 import Loading from "../components/Loading";
 
-const Button = ({
+const ButtonCustom = ({
                     buttonStyle,
                     textStyle,
                     title = '',
@@ -53,4 +53,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default Button;
+export default ButtonCustom;

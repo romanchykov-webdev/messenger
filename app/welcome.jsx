@@ -1,15 +1,18 @@
 import React from 'react';
 import {View, Text, StyleSheet, Image, Pressable} from 'react-native';
 import ScreenWrapper from "../components/ScreenWrapper";
-import {StatusBar} from "expo-status-bar";
 import {hp, wp} from "../helpers/common";
 import {theme} from "../constants/theme";
-import Button from "../components/Button";
+import ButtonCustom from "../components/ButtonCustom";
+import {useRouter} from "expo-router";
+import {StatusBar} from "expo-status-bar";
 
 const Welcome = () => {
+    const router=useRouter()
+
     return (
         <ScreenWrapper bg="white">
-            <StatusBar style="dark"/>
+            {/*<StatusBar style="dark"/>*/}
             <View style={styles.container}>
 
                 {/*    welcome image    */}
@@ -30,11 +33,10 @@ const Welcome = () => {
                 {/*    footer   */}
                 <View style={styles.footer}>
 
-                    <Button
+                    <ButtonCustom
                         title="Gettong started"
                         buttonStyle={{marginHorizontal: wp(3)}}
-                        onPress={() => {
-                        }}
+                        onPress={() => {router.push('signUp')}}
                     />
 
                     {/*    */}
@@ -42,7 +44,7 @@ const Welcome = () => {
                         <Text style={styles.loginText}>
                             Already have an account
                         </Text>
-                        <Pressable>
+                        <Pressable onPress={()=>router.push('login')}>
                             <Text style={[styles.loginText,{color:theme.colors.primaryDark,fontWeight:theme.fonts.semibold}]}>Login</Text>
                         </Pressable>
                     </View>
