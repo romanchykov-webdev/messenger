@@ -29,7 +29,7 @@ const RootLayout = () => {
                 //set auth
                 //move to home screen
                 setAuth(session?.user);
-                updateUserData(session?.user)
+                updateUserData(session?.user,session?.user?.email)
                 router.replace('/home')
             } else {
                 //set auth null
@@ -43,11 +43,11 @@ const RootLayout = () => {
 
     }, [])
 
-    const updateUserData = async (user) => {
+    const updateUserData = async (user,email) => {
         let res = await getUserData(user?.id);
         // console.log('got user data:', res)
 
-        if (res.success) setUserData(res.data);
+        if (res.success) setUserData({...res.data, email});
 
     }
 
