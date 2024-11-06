@@ -65,7 +65,7 @@ const UserHeader = ({user, router, handleLogOut}) => {
 
             {/* avatar   */}
             <View style={styles.container}>
-                <View style={{gap: 15}}>
+                <View style={{gap: 15,}}>
 
                     {/* avatar   */}
                     <View style={styles.avatarContainer}>
@@ -80,14 +80,13 @@ const UserHeader = ({user, router, handleLogOut}) => {
                     </View>
 
                     {/*    userName and address*/}
-                    <View style={{alignItems: 'center', gap: 4}}>
+                    <View style={{alignItems: 'center' ,gap:10 }}>
                         <Text style={styles.userName}>{user && user.name}</Text>
-                        <Text style={styles.infoText}>{user && user.address}</Text>
                         <Text style={styles.infoText}>{user && user.address}</Text>
                     </View>
 
                     {/*    email phone bio*/}
-                    <View style={{gap: 10}}>
+                    <View style={{gap: 10, }}>
 
                         <View style={styles.info}>
                             <Icon name="mail" color={theme.colors.textLight} size={20}/>
@@ -123,7 +122,6 @@ const UserHeader = ({user, router, handleLogOut}) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center'
     },
     headerContainer: {
         mHorizontal: wp(4),
@@ -136,7 +134,7 @@ const styles = StyleSheet.create({
     avatarContainer: {
         height: hp(12),
         width: hp(12),
-        alignItems: 'center',
+        alignSelf: 'center',
     },
     editIcon: {
         position: 'absolute',
