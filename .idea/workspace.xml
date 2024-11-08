@@ -13,26 +13,26 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="feat/test" />
+        <entry key="$PROJECT_DIR$" value="feat/create_create_post-screen" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "romanchykov-webdev"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;romanchykov-webdev&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:romanchykov-webdev/messenger.git",
-    "accountId": "9d56766e-10ba-4b62-a714-661956c285ca"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:romanchykov-webdev/messenger.git&quot;,
+    &quot;accountId&quot;: &quot;9d56766e-10ba-4b62-a714-661956c285ca&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="2oZ8QJlX2D8g6oZYhfnyMOnFgSp" />
   <component name="ProjectViewState">
     <option name="foldersAlwaysOnTop" value="false" />
@@ -42,8 +42,8 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/home/faram/programirovanie/rectNative/Messenger/messenger",
+    "git-widget-placeholder": "debug/debug__git",
+    "last_opened_file_path": "/home/faram/programirovanie/rectNative/Messenger/assets/messenger",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -68,6 +68,7 @@
       <option name="presentableId" value="Default" />
       <updated>1731065720262</updated>
       <workItem from="1731065721641" duration="777000" />
+      <workItem from="1731069224981" duration="279000" />
     </task>
     <task id="LOCAL-00001" summary="git">
       <option name="closed" value="true" />
@@ -77,7 +78,15 @@
       <option name="project" value="LOCAL" />
       <updated>1731066421235</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="git">
+      <option name="closed" value="true" />
+      <created>1731069409308</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1731069409308</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
