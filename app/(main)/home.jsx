@@ -1,21 +1,28 @@
-import React from 'react';
-import {View, Text, StyleSheet, Alert, Button, Pressable} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, Pressable, FlatList} from 'react-native';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import {useAuth} from "../../contexts/AuthContext";
-import {supabase} from "../../lib/supabase";
 import {hp, wp} from "../../helpers/common";
 import {theme} from "../../constants/theme";
 import Icon from "../../assets/icons";
 import {useRouter} from "expo-router";
 import Avatar from "../../components/Avatar";
+import {fetchPosts} from "../../services/postService";
+import PostCard from "../../components/PostCard";
+import Loading from "../../components/Loading";
+import {supabase} from "../../lib/supabase";
+import {getUserData} from "../../services/userService";
+
+
+var limit = 0
 
 const HomeScreen = () => {
 
-    const router=useRouter();
+    const router = useRouter();
 
     const {user, setAuth} = useAuth();
 
-    console.log('user', user);
+    // console.log('user', user);
 
     // const onLogOut = async () => {
     //     // setAuth(null);
@@ -27,39 +34,102 @@ const HomeScreen = () => {
     //     }
     // }
 
+
+    // get posts
+    const [posts, setPosts] = useState([])
+
+    const handlePostEvent = async (payload) => {
+        // console.log('payload',payload)
+        if (payload.eventType === 'INSERT') {
+            let newPost = {...payload.new};
+            let res = await getUserData((newPost.userId));
+            newPost.user=res.success ? res.data : {}
+            setPosts(prevPosts=>[newPost,...prevPosts])
+        }
+
+    }
+
+    useEffect(() => {
+
+        let postChannel = supabase
+            .channel('posts')
+            .on('postgres_changes', {event: '*', schema: 'public', table: 'posts'}, handlePostEvent)
+            .subscribe()
+
+
+        getPosts()
+
+        return () => {
+            supabase.removeChannel(postChannel)
+        }
+
+    }, [])
+
+    const getPosts = async () => {
+
+        limit = limit + 10;
+        let res = await fetchPosts(limit)
+        // console.log('get all post limit 10:', res)
+        // console.log('user:', res.data[0].user)
+
+        if (res.success) {
+            setPosts(res.data);
+        }
+    }
+
+    // console.log('posts',posts)
     return (
         <ScreenWrapper bg='white'>
             <View style={styles.container}>
 
-            {/*    header   */}
+                {/*    header   */}
                 <View style={styles.header}>
                     <Text style={styles.title}>
-                        InstBox
+                        FaRam
                     </Text>
 
                     {/*icons*/}
                     <View style={styles.icons}>
                         {/*heart*/}
-                        <Pressable onPress={()=>router.push('/notifications')}>
+                        <Pressable onPress={() => router.push('/notifications')}>
                             <Icon name="heart" size={hp(3.2)} strokeWidth={2} color={theme.colors.text}/>
                         </Pressable>
 
                         {/*plus*/}
-                        <Pressable onPress={()=>router.push('/newPost')}>
+                        <Pressable onPress={() => router.push('/newPost')}>
                             <Icon name="plus" size={hp(3.2)} strokeWidth={2} color={theme.colors.text}/>
                         </Pressable>
 
                         {/*user*/}
-                        <Pressable onPress={()=>router.push('/profile')}>
-                           <Avatar
-                               uri={user?.image}
-                               size={hp(4.3)}
-                               rounded={theme.radius.sm}
-                               style={{borderWidth:2}}
-                           />
+                        <Pressable onPress={() => router.push('/profile')}>
+                            <Avatar
+                                uri={user?.image}
+                                size={hp(4.3)}
+                                rounded={theme.radius.sm}
+                                style={{borderWidth: 2}}
+                            />
                         </Pressable>
                     </View>
                 </View>
+
+                {/*    al post  limit 10*/}
+                <FlatList
+                    data={posts}
+                    contentContainerStyle={styles.listStyle}
+                    showsVerticalScrollIndicator={false}
+                    keyExtractor={(item,) => item.id.toString()}
+                    renderItem={({item}) => <PostCard
+                        item={item}
+                        currentUser={user}
+                        router={router}
+                    />}
+                    ListFooterComponent={(
+                        <View style={{marginVertical: posts.length > 0 ? 200 : 30}}>
+                            <Loading/>
+                        </View>
+                    )}
+                />
+
             </View>
             {/*<Button title="LogOut" onPress={onLogOut}/>*/}
         </ScreenWrapper>
@@ -78,38 +148,38 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         marginHorizontal: wp(4),
     },
-    title:{
-        color:theme.colors.text,
-        fontSize:hp(3.2),
+    title: {
+        color: theme.colors.text,
+        fontSize: hp(3.2),
         fontWeight: theme.fonts.bold,
     },
-    imageAvatar:{
-        height:hp(4.3),
-        width:hp(4.3),
-        borderRadius:theme.radius.sm,
-        borderCurve:'continuous',
-        borderColor:theme.colors.gray,
-        borderWidth:3,
+    imageAvatar: {
+        height: hp(4.3),
+        width: hp(4.3),
+        borderRadius: theme.radius.sm,
+        borderCurve: 'continuous',
+        borderColor: theme.colors.gray,
+        borderWidth: 3,
     },
-    icons:{
-        flexDirection:'row',
-        justifyContent:'center',
-        alignItems:'center',
-        gap:10,
+    icons: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 10,
     },
-    listStyle:{
-        paddingTop:20,
-        paddingHorizontal:wp(4),
+    listStyle: {
+        paddingTop: 20,
+        paddingHorizontal: wp(4),
     },
-    noPosts:{
-        fontSize:hp(2),
-        textAlign:'center',
-        color:theme.colors.text,
+    noPosts: {
+        fontSize: hp(2),
+        textAlign: 'center',
+        color: theme.colors.text,
     },
-    pill:{
-        position:'absolute',
-        right:-10,
-        top:-4,
+    pill: {
+        position: 'absolute',
+        right: -10,
+        top: -4,
     }
 })
 

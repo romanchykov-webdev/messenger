@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Alert, Pressable} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Alert, Pressable, ScrollView} from 'react-native';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import {useAuth} from "../../contexts/AuthContext";
 import {useRouter} from "expo-router";
@@ -9,6 +9,7 @@ import Icon from "../../assets/icons";
 import {theme} from "../../constants/theme";
 import {supabase} from "../../lib/supabase";
 import Avatar from "../../components/Avatar";
+import {StatusBar} from "expo-status-bar";
 
 
 const Profile = () => {
@@ -65,7 +66,8 @@ const UserHeader = ({user, router, handleLogOut}) => {
 
             {/* avatar   */}
             <View style={styles.container}>
-                <View style={{gap: 15,}}>
+                <ScrollView contentContainerStyle={{gap:15}}>
+                    <StatusBar style="dark"/>
 
                     {/* avatar   */}
                     <View style={styles.avatarContainer}>
@@ -112,7 +114,7 @@ const UserHeader = ({user, router, handleLogOut}) => {
 
                     </View>
 
-                </View>
+                </ScrollView>
             </View>
 
         </View>
