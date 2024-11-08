@@ -9,18 +9,18 @@ const ScreenWrapper = ({children, bg}) => {
     const paddingTop = top > 0 ? top + 5 : 30;
 
     return (
-        <ScrollView
-            contentContainerStyle={{flex: 1, paddingTop, backgroundColor: bg}}
-            keyboardDismissMode='on-drag'
-        >
-        {/*<View style={{flex: 1, paddingTop, backgroundColor: bg}}>*/}
-            <StatusBar style="dark"/>
+        // <ScrollView
+        //     contentContainerStyle={{flex: 1, paddingTop, backgroundColor: bg}}
+        //     keyboardDismissMode='on-drag'
+        // >
+        <View style={{flex: 1, paddingTop, backgroundColor: bg}}>
+            {/*<StatusBar style="dark"/>*/}
 
             {
                 children
             }
-        {/*</View>*/}
-        </ScrollView>
+        </View>
+        // </ScrollView>
     );
 };
 

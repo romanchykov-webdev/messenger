@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Pressable, Alert} from 'react-native';
+import {View, Text, StyleSheet, Pressable, Alert, ScrollView} from 'react-native';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import {hp, wp} from "../../helpers/common";
 import {theme} from "../../constants/theme";
@@ -15,6 +15,7 @@ import {updateUser} from "../../services/userService";
 import {useRouter} from "expo-router";
 
 import * as ImagePicker from 'expo-image-picker';
+import {StatusBar} from "expo-status-bar";
 
 
 const EditProfile = () => {
@@ -114,7 +115,11 @@ const EditProfile = () => {
                     <Header title="Edit profile"/>
 
                     {/*    form*/}
-                    <View style={styles.form}>
+                    <ScrollView
+                        keyboardDismissMode="on-drag"
+                        contentContainerStyle={styles.form}
+                    >
+                        <StatusBar style="dark"/>
 
                         {/*    avatar*/}
                         <View style={styles.avatarContainer}>
@@ -169,7 +174,7 @@ const EditProfile = () => {
 
                         {/*    button on submit*/}
                         <ButtonCustom title="updata" loading={loading} onPress={onSubmit}/>
-                    </View>
+                    </ScrollView>
                 </View>
             </View>
         </ScreenWrapper>
