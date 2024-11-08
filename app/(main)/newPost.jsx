@@ -125,7 +125,7 @@ const NewPost = () => {
 
     }
 
-    console.log('file uri',getFileUri(file));
+    // console.log('file uri',getFileUri(file));
     return (
         <ScreenWrapper bg='white'>
             <View style={styles.container}>
