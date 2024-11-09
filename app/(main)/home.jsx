@@ -12,6 +12,7 @@ import PostCard from "../../components/PostCard";
 import Loading from "../../components/Loading";
 import {supabase} from "../../lib/supabase";
 import {getUserData} from "../../services/userService";
+import {StatusBar} from "expo-status-bar";
 
 
 var limit = 0
@@ -38,13 +39,16 @@ const HomeScreen = () => {
     // get posts
     const [posts, setPosts] = useState([])
 
+    // if not has posts
+    const [hasMore, setHasMore] = useState(true)
+
     const handlePostEvent = async (payload) => {
         // console.log('payload',payload)
         if (payload.eventType === 'INSERT') {
             let newPost = {...payload.new};
             let res = await getUserData((newPost.userId));
-            newPost.user=res.success ? res.data : {}
-            setPosts(prevPosts=>[newPost,...prevPosts])
+            newPost.user = res.success ? res.data : {}
+            setPosts(prevPosts => [newPost, ...prevPosts])
         }
 
     }
@@ -57,7 +61,7 @@ const HomeScreen = () => {
             .subscribe()
 
 
-        getPosts()
+        // getPosts()
 
         return () => {
             supabase.removeChannel(postChannel)
@@ -67,12 +71,17 @@ const HomeScreen = () => {
 
     const getPosts = async () => {
 
-        limit = limit + 10;
+        if (!hasMore) return null;
+
+        // limit = limit + 10;
+        limit = limit + 4;
         let res = await fetchPosts(limit)
         // console.log('get all post limit 10:', res)
         // console.log('user:', res.data[0].user)
 
         if (res.success) {
+            // if no has posts
+            if (posts.length === res.data.length) setHasMore(false)
             setPosts(res.data);
         }
     }
@@ -84,6 +93,7 @@ const HomeScreen = () => {
 
                 {/*    header   */}
                 <View style={styles.header}>
+                    <StatusBar style='dark'/>
                     <Text style={styles.title}>
                         FaRam
                     </Text>
@@ -123,11 +133,23 @@ const HomeScreen = () => {
                         currentUser={user}
                         router={router}
                     />}
-                    ListFooterComponent={(
+                    onEndReached={() => {
+                        // get 10 posts limit+10
+                        getPosts()
+                        console.log('is finish limit:', limit)
+                    }}
+                    onEndReachedThreshold={0.2}
+                    ListFooterComponent={hasMore?(
                         <View style={{marginVertical: posts.length > 0 ? 200 : 30}}>
                             <Loading/>
                         </View>
-                    )}
+                    )
+                        :(
+                            <View style={{marginVertical:30}}>
+                                <Text style={styles.noPosts}>No more posts</Text>
+                            </View>
+                        )
+                }
                 />
 
             </View>

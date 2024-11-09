@@ -1,7 +1,7 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, Alert, Share} from 'react-native';
 import {theme} from "../constants/theme";
-import {hp, wp} from "../helpers/common";
+import {hp, stripHtmlTags, wp} from "../helpers/common";
 import Avatar from "./Avatar";
 import moment from "moment";
 import Icon from "../assets/icons";
@@ -11,7 +11,9 @@ import {Image} from 'expo-image'
 import {Video} from 'expo-av';
 
 import RenderHtml from 'react-native-render-html';
-import {getSupabaseFileUrl} from "../services/imagesService";
+import {downloadFile, getSupabaseFileUrl} from "../services/imagesService";
+import {createPostLike, removePostLike} from "../services/postService";
+import Loading from "./Loading";
 
 const textStyle = {
     color: theme.colors.dark,
@@ -38,17 +40,102 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
         elevation: 1,
     }
 
+    // get like for post
+    const [likes, setLikes] = useState([])
+    const [loading, setLoading] = useState(false) //for share post
+    useEffect(() => {
+        setLikes(item?.postLikes)
+    }, [])
+
     // for format data
     const createdAt = moment(item?.created_at).format('MMM D')
 
-    const openPostDetails = () => {
+
+    //
+    const liked = likes.filter(like => like.userId === currentUser?.id)[0] ? true : false;
+    // console.log('item?.user?.image',getSupabaseFileUrl(item?.user?.image))
+
+    // add liks
+    const onLike = async () => {
+
+        if (liked) {
+            // remove like
+            let updateLikes = likes.filter(like => like.userId != currentUser?.id);
+            setLikes([...updateLikes])
+
+            let res = await removePostLike(item?.id, currentUser?.id);
+
+            console.log('remove loke', res)
+            // console.log('data',data)
+
+            if (!res.success) {
+                Alert.alert('Post Like', 'Something went wrong!')
+            }
+        } else {
+            //     add new like
+            let data = {
+                userId: currentUser?.id,
+                postId: item?.id,
+            }
+            setLikes([...likes, data])
+
+            let res = await createPostLike(data)
+
+            console.log('add like', res)
+            // console.log('data',data)
+
+            if (!res.success) {
+                Alert.alert('Post Like', 'Something went wrong!')
+            }
+        }
+
 
     }
 
     //
-    const likes=[]
-    const liked = true
-    // console.log('item?.user?.image',getSupabaseFileUrl(item?.user?.image))
+    // console.log('item post likes', item)
+
+    // on share
+    // const onShare = async () => {
+    //     let content = {message: stripHtmlTags(item?.body)};
+    //
+    //     if (item?.file) {
+    //         //     download the file the share the local uri
+    //         let url = await downloadFile(getSupabaseFileUrl(item?.file).uri);
+    //         content.url = url;
+    //     }
+    //
+    //     Share.share(content);
+    //
+    // }
+    const onShare = async () => {
+        try {
+            let content = {message: stripHtmlTags(item?.body)};
+
+            if (item?.file) {
+                // Загрузка файла и получение локального URI
+                setLoading(true)
+                const localUri = await downloadFile(getSupabaseFileUrl(item?.file));
+                if (localUri) {
+                    content.url = localUri;
+                    setLoading(false)
+                } else {
+                    console.log("Ошибка при загрузке файла");
+                }
+            }
+
+            await Share.share(content);
+
+        } catch (error) {
+            console.error("Ошибка при попытке поделиться постом:", error);
+        }
+    };
+
+    // open post details
+    const openPostDetails = () => {
+        router.push({pathname: 'postDetails', params: {postId: item?.id}})
+    }
+
 
     return (
         <View style={[styles.container, hasShadow && shadowStyle]}>
@@ -124,8 +211,9 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
 
                     {/*licks*/}
                     <View style={styles.footerButton}>
-                        <TouchableOpacity>
-                            <Icon name='heart' fill={liked ? theme.colors.rose : 'transparent'} size={24} color={liked ? theme.colors.rose : theme.colors.textLight}/>
+                        <TouchableOpacity onPress={onLike}>
+                            <Icon name='heart' fill={liked ? theme.colors.rose : 'transparent'} size={24}
+                                  color={liked ? theme.colors.rose : theme.colors.textLight}/>
                         </TouchableOpacity>
 
                         <Text style={styles.count}>
@@ -136,7 +224,7 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
 
                     {/*comments*/}
                     <View style={styles.footerButton}>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={openPostDetails}>
                             <Icon name='comment' size={24} color={theme.colors.textLight}/>
                         </TouchableOpacity>
 
@@ -148,9 +236,18 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
 
                     {/*share post*/}
                     <View style={styles.footerButton}>
-                        <TouchableOpacity>
-                            <Icon name='share' size={24} color={theme.colors.textLight}/>
-                        </TouchableOpacity>
+                        {
+                            loading
+                                ? (
+                                    <Loading size="small"/>
+                                )
+                                : (
+                                    <TouchableOpacity onPress={onShare}>
+                                        <Icon name='share2' size={24} color={theme.colors.textLight}/>
+                                    </TouchableOpacity>
+                                )
+                        }
+
                     </View>
 
                 </View>
