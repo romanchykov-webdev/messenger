@@ -31,7 +31,7 @@ const tagsStyles = {
     },
 }
 
-const PostCard = ({item, currentUser, router, hasShadow = true}) => {
+const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = true}) => {
 
     const shadowStyle = {
         shadowOffset: {width: 0, height: 2},
@@ -133,10 +133,11 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
 
     // open post details
     const openPostDetails = () => {
+        if(!showMoreIcon) return null;
         router.push({pathname: 'postDetails', params: {postId: item?.id}})
     }
 
-
+    // console.log('post item comment:',item?.comments)
     return (
         <View style={[styles.container, hasShadow && shadowStyle]}>
 
@@ -157,9 +158,13 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
                 </View>
 
                 {/*    three dots*/}
-                <TouchableOpacity onPress={openPostDetails}>
-                    <Icon name='threeDotsHorizontal' size={hp(3.4)} color={theme.colors.text} strokeWidth={3}/>
-                </TouchableOpacity>
+                {
+                    showMoreIcon && (
+                        <TouchableOpacity onPress={openPostDetails}>
+                            <Icon name='threeDotsHorizontal' size={hp(3.4)} color={theme.colors.text} strokeWidth={3}/>
+                        </TouchableOpacity>
+                    )
+                }
 
 
             </View>
@@ -211,7 +216,7 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
 
                     {/*licks*/}
                     <View style={styles.footerButton}>
-                        <TouchableOpacity onPress={onLike}>
+                        <TouchableOpacity onPress={onLike} style={{padding: 2}}>
                             <Icon name='heart' fill={liked ? theme.colors.rose : 'transparent'} size={24}
                                   color={liked ? theme.colors.rose : theme.colors.textLight}/>
                         </TouchableOpacity>
@@ -224,15 +229,19 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
 
                     {/*comments*/}
                     <View style={styles.footerButton}>
-                        <TouchableOpacity onPress={openPostDetails}>
+                        <TouchableOpacity onPress={openPostDetails} style={{padding: 2}}>
                             <Icon name='comment' size={24} color={theme.colors.textLight}/>
                         </TouchableOpacity>
 
                         <Text style={styles.count}>
-                            {0}
+                            {
+                                item?.comments[0]?.count
+
+                            }
                         </Text>
 
                     </View>
+
 
                     {/*share post*/}
                     <View style={styles.footerButton}>
@@ -242,7 +251,7 @@ const PostCard = ({item, currentUser, router, hasShadow = true}) => {
                                     <Loading size="small"/>
                                 )
                                 : (
-                                    <TouchableOpacity onPress={onShare}>
+                                    <TouchableOpacity onPress={onShare} style={{padding: 2}}>
                                         <Icon name='share2' size={24} color={theme.colors.textLight}/>
                                     </TouchableOpacity>
                                 )

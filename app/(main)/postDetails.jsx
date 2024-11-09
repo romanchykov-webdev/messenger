@@ -1,21 +1,206 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import {useLocalSearchParams} from "expo-router";
+import React, {useEffect, useRef, useState} from 'react';
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert} from 'react-native';
+import {useLocalSearchParams, useRouter} from "expo-router";
+import {createComment, fetchPostsDetails} from "../../services/postService";
+import {theme} from "../../constants/theme";
+import {hp, wp} from "../../helpers/common";
+import {useAuth} from "../../contexts/AuthContext";
+import PostCard from "../../components/PostCard";
+import Loading from "../../components/Loading";
+import InputCustom from "../../components/InputCustom";
+import Icon from "../../assets/icons";
+import CommentItem from "../../components/CommentItem";
 
 const PostDetails = () => {
 
-  //   get pist Id
-    const {postId}=useLocalSearchParams()
-    console.log('got post id:',postId)
+    const [startLoading, setStartLoading] = useState(true)
 
-  return (
-    <View >
-      <Text>PostDetails works!</Text>
-        <Text>past id: {postId}</Text>
-    </View>
-  );
+    const [loading, setLoading] = useState(false)
+
+    const inputRef = useRef(null)
+    const commentRef = useRef('')
+
+    //   get pist Id
+    const {postId} = useLocalSearchParams()
+    // console.log('got post id:',postId)
+
+    const {user} = useAuth()
+
+    const router = useRouter()
+
+    const [post, setPost] = useState(null)
+
+    console.log('post', post)
+
+    useEffect(() => {
+        getPostDetails()
+    }, [])
+
+    const getPostDetails = async () => {
+        //     fetch post details here
+        let res = await fetchPostsDetails(postId);
+        // console.log('post details',res)
+
+        if (res.success) setPost(res.data);
+
+        setStartLoading(false)
+
+    }
+
+
+    // add new comment
+    const onNewComment = async () => {
+        if (!commentRef.current) return null;
+
+        let data = {
+            userId: user?.id,
+            postId: post?.id,
+            text: commentRef.current,
+        }
+        //     create comment
+        setLoading(true)
+        let res = await createComment(data)
+        if (res.success) {
+            // send notification later
+            inputRef?.current?.clear();
+            commentRef.current = '';
+        } else {
+            Alert.alert('Comment', res.msg)
+        }
+        setLoading(false)
+
+    }
+
+    // delete comments
+    const onDeleteComment=async (comment)=>{
+        console.log('comment for delete',comment)
+    }
+
+
+    if (startLoading) {
+        return (
+            <View style={styles.center}>
+                <Loading size='small'/>
+            </View>
+        )
+    }
+
+    if (!post) {
+        return (
+            <View style={[styles.center, {justifyContent: 'flex-start', marginTop: 100}]}>
+                <Text style={styles.notFound}>Post not Found</Text>
+            </View>
+        )
+    }
+
+
+    return (
+        <View style={styles.container}>
+
+            <ScrollView
+                keyboardDismissMode='on-drag'
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.list}
+            >
+
+                <PostCard
+                    item={{...post, comments: [{count: post?.comments?.length}]}}
+                    currentUser={user}
+                    router={router}
+                    hasShadow={false}
+                    showMoreIcon={false}
+                />
+                {/*    comment block*/}
+                <View style={styles.inputContainer}>
+                    <InputCustom
+                        inputRaf={inputRef}
+                        placeholder='Type comments...'
+                        onChangeText={(value) => (commentRef.current = value)}
+                        placeholderTextColor={theme.colors.textLight}
+                        containerStyle={{flex: 1, height: hp(6.3), borderRadius: theme.radius.xl}}
+                    />
+                    {
+                        loading
+                            ? (
+                                <View style={styles.loading}>
+                                    <Loading size='small'/>
+                                </View>
+                            )
+                            : (
+                                <TouchableOpacity style={styles.sedIcon} onPress={onNewComment}>
+                                    <Icon name='send' color={theme.colors.primaryDark}/>
+                                </TouchableOpacity>
+                            )
+                    }
+
+                </View>
+
+                {/*    comments list*/}
+                <View style={{marginVertical: 15, gap: 17}}>
+                    {
+                        post?.comments?.map(comment => <CommentItem
+                            key={comment?.id?.toString()}
+                            item={comment}
+                            canDelete={user.id===comment.userId || user.id===post.userId}
+                            onDelete={onDeleteComment}
+                        />)
+                    }
+                    {
+                        post?.comments?.length===0 &&(
+                            <Text style={{color:theme.colors.text, marginLeft:5}}>
+                                Be first to comment
+                            </Text>
+                        )
+                    }
+
+                </View>
+
+            </ScrollView>
+        </View>
+    );
 };
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'white',
+        paddingVertical: wp(7),
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    list: {
+        paddingHorizontal: wp(4),
+    },
+    sedIcon: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 0.8,
+        borderColor: theme.colors.primary,
+        borderRadius: theme.radius.lg,
+        borderCurve: 'continuous',
+        height: hp(5.8),
+        width: hp(5.8),
+    },
+    center: {
+        flex: 1,
+        alignSelf: 'center',
+        justifyContent: 'center',
+    },
+    notFound: {
+        fontSize: hp(2.5),
+        color: theme.colors.text,
+        fontWeight: theme.fonts.medium,
+    },
+    loading: {
+        height: hp(5.8),
+        width: hp(5.8),
+        justifyContent: 'center',
+        alignSelf: 'center',
+        transform: [{scale: 1.3}]
+    }
+})
 
 export default PostDetails;
