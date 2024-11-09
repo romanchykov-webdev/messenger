@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Pressable, Alert} from 'react-native';
+import {View, Text, StyleSheet, Pressable, Alert, ScrollView} from 'react-native';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import {hp, wp} from "../../helpers/common";
 import {theme} from "../../constants/theme";
@@ -114,7 +114,9 @@ const EditProfile = () => {
                     <Header title="Edit profile"/>
 
                     {/*    form*/}
-                    <View style={styles.form}>
+                    <ScrollView
+                        keyboardDismissMode='on-drag'
+                        contentContainerStyle={styles.form}>
 
                         {/*    avatar*/}
                         <View style={styles.avatarContainer}>
@@ -159,6 +161,7 @@ const EditProfile = () => {
                         {/*user bio*/}
                         <InputCustom
                             // icon={<Icon name='call'/>}
+
                             placeholder='Enter you bio'
                             multiline={true}
                             containerStyle={styles.bio}
@@ -169,7 +172,7 @@ const EditProfile = () => {
 
                         {/*    button on submit*/}
                         <ButtonCustom title="updata" loading={loading} onPress={onSubmit}/>
-                    </View>
+                    </ScrollView>
                 </View>
             </View>
         </ScreenWrapper>
@@ -210,6 +213,8 @@ const styles = StyleSheet.create({
     form: {
         gap: 18,
         marginTop: 20,
+        // marginTop: 20,
+        // paddingBottom: 18,
     }
     ,
     input: {

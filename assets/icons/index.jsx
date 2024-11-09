@@ -16,6 +16,7 @@ import ThreeDotsCircle from './ThreeDotsCircle';
 import ThreeDotsHorizontal from './ThreeDotsHorizontal';
 import Comment from './Comment';
 import Share from './Share';
+import Share2 from './Share2';
 import Send from './Send';
 import Delete from './Delete';
 import Logout from './logout';
@@ -39,6 +40,7 @@ const icons = {
     threeDotsHorizontal: ThreeDotsHorizontal,
     comment: Comment,
     share: Share,
+    share2: Share2,
     send: Send,
     delete: Delete,
     logout: Logout,

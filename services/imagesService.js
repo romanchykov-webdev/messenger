@@ -21,6 +21,41 @@ export const getSupabaseFileUrl = filePath => {
     return null
 }
 
+// share file
+// export const downloadFile = async (url) => {
+//
+//     try {
+//
+//         const {uri} = await FileSystem.downloadAsync(url, getLocalFilePath(url))
+//         return uri;
+//
+//
+//     } catch (error) {
+//         return null;
+//     }
+//
+// }
+export const downloadFile = async (url) => {
+    if (!url) {
+        console.log("URL не передан для загрузки");
+        return null;
+    }
+
+    try {
+        const {uri} = await FileSystem.downloadAsync(url, getLocalFilePath(url));
+        console.log("Файл загружен:", uri);
+        return uri;
+    } catch (error) {
+        console.error("Ошибка при загрузке файла:", error);
+        return null;
+    }
+};
+export const getLocalFilePath = filePath => {
+    let fileName = filePath.split('/').pop();
+    return `${FileSystem.documentDirectory}${fileName}`;
+}
+
+
 //upload media
 export const uploadFile = async (folderName, fileUri, isImage = true) => {
 
