@@ -1,9 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Alert, Share} from 'react-native';
 import {theme} from "../constants/theme";
-import {hp, stripHtmlTags, wp} from "../helpers/common";
+import {formatDate, formatTime, hp, stripHtmlTags, wp} from "../helpers/common";
 import Avatar from "./Avatar";
-import moment from "moment";
 import Icon from "../assets/icons";
 
 import {Image} from 'expo-image'
@@ -59,7 +58,7 @@ const PostCard = ({
     }, [])
 
     // for format data
-    const createdAt = moment(item?.created_at).format('MMM D')
+    // const createdAt = moment(item?.created_at).format('MMM D')
 
 
     //
@@ -68,41 +67,60 @@ const PostCard = ({
     // console.log('item?.user?.image',getSupabaseFileUrl(item?.user?.image))
 
     // add liks
+    // const onLike = async () => {
+    //
+    //     if (liked) {
+    //         // remove like
+    //         let updateLikes = likes.filter(like => like.userId != currentUser?.id);
+    //         setLikes([...updateLikes])
+    //
+    //         let res = await removePostLike(item?.id, currentUser?.id);
+    //
+    //         // console.log('remove like', res)
+    //         // console.log('data',data)
+    //
+    //         if (!res.success) {
+    //             Alert.alert('Post Like', 'Something went wrong!')
+    //         }
+    //     } else {
+    //         //     add new like
+    //         let data = {
+    //             userId: currentUser?.id,
+    //             postId: item?.id,
+    //         }
+    //         setLikes([...likes, data])
+    //
+    //         let res = await createPostLike(data)
+    //
+    //         // console.log('add like', res)
+    //         // console.log('data',data)
+    //
+    //         if (!res.success) {
+    //             Alert.alert('Post Like', 'Something went wrong!')
+    //         }
+    //     }
+    //
+    //
+    // }
+
     const onLike = async () => {
+        const userHasLiked = likes.some(like => like.userId === currentUser?.id);
+        const updatedLikes = userHasLiked
+            ? likes.filter(like => like.userId !== currentUser?.id)
+            : [...likes, { userId: currentUser?.id, postId: item?.id }];
 
-        if (liked) {
-            // remove like
-            let updateLikes = likes.filter(like => like.userId != currentUser?.id);
-            setLikes([...updateLikes])
+        setLikes(updatedLikes);
 
-            let res = await removePostLike(item?.id, currentUser?.id);
+        const res = userHasLiked
+            ? await removePostLike(item?.id, currentUser?.id)
+            : await createPostLike({ userId: currentUser?.id, postId: item?.id });
 
-            console.log('remove loke', res)
-            // console.log('data',data)
-
-            if (!res.success) {
-                Alert.alert('Post Like', 'Something went wrong!')
-            }
-        } else {
-            //     add new like
-            let data = {
-                userId: currentUser?.id,
-                postId: item?.id,
-            }
-            setLikes([...likes, data])
-
-            let res = await createPostLike(data)
-
-            console.log('add like', res)
-            // console.log('data',data)
-
-            if (!res.success) {
-                Alert.alert('Post Like', 'Something went wrong!')
-            }
+        if (!res.success) {
+            Alert.alert('Post Like', 'Something went wrong!');
         }
+    };
 
 
-    }
 
     //
     // console.log('item post likes', item)
@@ -183,7 +201,11 @@ const PostCard = ({
                     />
                     <View style={{gap: 2}}>
                         <Text style={styles.userName}>{item?.user?.name}</Text>
-                        <Text style={styles.postTime}>{createdAt}</Text>
+                        <View style={{flexDirection:'row'}}>
+                            <Text style={styles.postTime}>{formatDate(item?.created_at)} -</Text>
+                            <Text style={styles.postTime}>{formatTime(item?.created_at)}</Text>
+                        </View>
+
                     </View>
                 </View>
 

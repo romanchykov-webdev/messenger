@@ -90,7 +90,7 @@ const Profile = () => {
                 onEndReached={() => {
                     // get 10 posts limit+10
                     getPosts()
-                    console.log('is finish limit:', limit)
+                    // console.log('is finish limit:', limit)
                 }}
                 onEndReachedThreshold={0.2}
                 ListFooterComponent={hasMore ? (

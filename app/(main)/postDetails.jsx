@@ -15,6 +15,7 @@ import {getUserData} from "../../services/userService";
 
 // for up input //поднимает контент при открытии клавиатуры
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {createNotification} from "../../services/notificationService";
 
 const PostDetails = () => {
 
@@ -26,8 +27,9 @@ const PostDetails = () => {
     const commentRef = useRef('')
 
     //   get pist Id
-    const {postId} = useLocalSearchParams()
+    const {postId,commentId} = useLocalSearchParams()
     // console.log('got post id:',postId)
+    // console.log('got post commentId:',commentId)
 
     const {user} = useAuth()
 
@@ -35,14 +37,14 @@ const PostDetails = () => {
 
     const [post, setPost] = useState(null)
 
-    console.log('post', post)
+    // console.log('post', post)
 
     // useEffect(() => {
     //     getPostDetails()
     // }, [])
 
     const handleNewComment = async (payload) => {
-        console.log('got new comment', payload.new);
+        // console.log('got new comment', payload.new);
 
         if (payload.new) {
             let newComment = {...payload.new};
@@ -86,7 +88,13 @@ const PostDetails = () => {
         let res = await fetchPostsDetails(postId);
         // console.log('post details',res)
 
-        if (res.success) setPost(res.data);
+        // if (res.success) setPost(res.data);
+
+        if (res.success) {
+            // Сортируем комментарии по убыванию даты создания
+            const sortedComments = res.data.comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            setPost({ ...res.data, comments: sortedComments });
+        }
 
         setStartLoading(false)
 
@@ -107,8 +115,19 @@ const PostDetails = () => {
         let res = await createComment(data)
         if (res.success) {
             // send notification later
+            if(user.id!=post.userId){
+                let notify={
+                    senderId:user.id,
+                    receiverId:post.userId,
+                    title:'Commented on your post',
+                    data:JSON.stringify({postId:post.id,commentId:res?.data?.id})
+                }
+                createNotification(notify)
+            }
+            // send notification later
             inputRef?.current?.clear();
-            commentRef.current = '';
+            commentRef.current = "";
+            // commentRef.current?.setContentHTML('');
         } else {
             Alert.alert('Comment', res.msg)
         }
@@ -232,15 +251,17 @@ const PostDetails = () => {
                     {/*    comments list*/}
                     <View style={{marginVertical: 15, gap: 17}}>
                         {
-                            post?.comments?.map(comment => <CommentItem
+                            post?.comments?.map(comment =>
+                                <CommentItem
                                 key={comment?.id?.toString()}
                                 item={comment}
                                 canDelete={user.id === comment.userId || user.id === post.userId}
                                 onDelete={onDeleteComment}
+                                highlight={comment.id == commentId}
                             />)
                         }
                         {
-                            post?.comments?.length === 0 && (
+                            post?.comments?.length == 0 && (
                                 <Text style={{color: theme.colors.text, marginLeft: 5}}>
                                     Be first to comment
                                 </Text>
