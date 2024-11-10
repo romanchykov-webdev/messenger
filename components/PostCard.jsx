@@ -31,7 +31,18 @@ const tagsStyles = {
     },
 }
 
-const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = true}) => {
+const PostCard = ({
+                      item,
+                      currentUser,
+                      router,
+                      hasShadow = true,
+                      showMoreIcon = true,
+                      showDelete = false,
+                      onDelete = () => {
+                      },
+                      onEdit = () => {
+                      }
+                  }) => {
 
     const shadowStyle = {
         shadowOffset: {width: 0, height: 2},
@@ -52,8 +63,8 @@ const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = t
 
 
     //
-    // const liked = likes.filter(like => like.userId === currentUser?.id)[0] ? true : false;
-    const liked = likes?.some(like => like.userId === currentUser?.id) || false;
+    const liked = likes.filter(like => like.userId === currentUser?.id)[0] ? true : false;
+    // const liked = likes?.some(like => like.userId === currentUser?.id) || false;
     // console.log('item?.user?.image',getSupabaseFileUrl(item?.user?.image))
 
     // add liks
@@ -134,8 +145,26 @@ const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = t
 
     // open post details
     const openPostDetails = () => {
-        if(!showMoreIcon) return null;
+        if (!showMoreIcon) return null;
         router.push({pathname: 'postDetails', params: {postId: item?.id}})
+    }
+
+
+    // for delete post
+    const handleDeletePost=async ()=>{
+        // onDelete
+        Alert.alert('Delete', 'Are you sure you want to do this?', [
+            {
+                text: 'Cancel',
+                onPress: () => console.log('modal cancel'),
+                style: 'cancel'
+            },
+            {
+                text: 'Delete',
+                onPress: () => onDelete(item),
+                style: 'destructive'
+            }
+        ]);
     }
 
     // console.log('post item comment:',item?.comments)
@@ -164,6 +193,22 @@ const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = t
                         <TouchableOpacity onPress={openPostDetails}>
                             <Icon name='threeDotsHorizontal' size={hp(3.4)} color={theme.colors.text} strokeWidth={3}/>
                         </TouchableOpacity>
+                    )
+                }
+
+            {/*    for delete or edit post*/}
+                {
+                    showDelete && currentUser.id ===item?.userId &&(
+                        <View style={styles.actions}>
+
+                        {/*    edit post*/}
+                            <TouchableOpacity onPress={()=>onEdit(item)} style={styles.buttonED}>
+                                <Icon name='edit' size={hp(2.5)} color={theme.colors.text} strokeWidth={3}/>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleDeletePost} style={styles.buttonED}>
+                                <Icon name='delete' size={hp(2.5)} color={theme.colors.rose} strokeWidth={3}/>
+                            </TouchableOpacity>
+                        </View>
                     )
                 }
 
@@ -235,7 +280,7 @@ const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = t
                         </TouchableOpacity>
 
                         <Text style={styles.count}>
-                            {item?.comments?.[0]?.count ?? 0}
+                            {item?.comments?.[0]?.count}
                         </Text>
 
                     </View>
@@ -326,6 +371,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 18,
+    },
+    buttonED:{
+        padding:10,
+        backgroundColor: 'white',
+        borderRadius:theme.radius.sm,
+        borderWidth:0.5,
+        borderColor:theme.colors.gray,
+        // box shadow
+        shadowColor: theme.colors.textLight,
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+        elevation: 7
+
     },
     count: {
         color: theme.colors.text,
