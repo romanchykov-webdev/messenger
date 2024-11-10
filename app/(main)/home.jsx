@@ -63,50 +63,50 @@ const HomeScreen = () => {
         }
     };
 
-    // useEffect(() => {
-    //
-    //     let postChannel = supabase
-    //         .channel('posts')
-    //         .on('postgres_changes', {event: '*', schema: 'public', table: 'posts'}, handlePostEvent)
-    //         .subscribe()
-    //
-    //
-    //     // getPosts()
-    //
-    //     return () => {
-    //         supabase.removeChannel(postChannel)
-    //     }
-    //
-    // }, [])
+    useEffect(() => {
+
+        let postChannel = supabase
+            .channel('posts')
+            .on('postgres_changes', {event: '*', schema: 'public', table: 'posts'}, handlePostEvent)
+            .subscribe()
+
+
+        // getPosts()
+
+        return () => {
+            supabase.removeChannel(postChannel)
+        }
+
+    }, [])
 
     // useEffect для подписки на события новых постов и комментариев
-    useEffect(() => {
-        // Создание канала для подписки на изменения в таблице `posts`
-        const postChannel = supabase
-            .channel('posts')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'posts'
-            }, handlePostEvent)
-            .subscribe();
-
-        // Создание канала для подписки на новые комментарии в таблице `comments`
-        const commentChannel = supabase
-            .channel('comments')
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'comments'
-            }, handleNewComment)
-            .subscribe();
-
-        // Удаление подписок при размонтировании компонента
-        return () => {
-            supabase.removeChannel(postChannel);
-            supabase.removeChannel(commentChannel);
-        };
-    }, []);
+    // useEffect(() => {
+    //     // Создание канала для подписки на изменения в таблице `posts`
+    //     const postChannel = supabase
+    //         .channel('posts')
+    //         .on('postgres_changes', {
+    //             event: '*',
+    //             schema: 'public',
+    //             table: 'posts'
+    //         }, handlePostEvent)
+    //         .subscribe();
+    //
+    //     // Создание канала для подписки на новые комментарии в таблице `comments`
+    //     const commentChannel = supabase
+    //         .channel('comments')
+    //         .on('postgres_changes', {
+    //             event: 'INSERT',
+    //             schema: 'public',
+    //             table: 'comments'
+    //         }, handleNewComment)
+    //         .subscribe();
+    //
+    //     // Удаление подписок при размонтировании компонента
+    //     return () => {
+    //         supabase.removeChannel(postChannel);
+    //         supabase.removeChannel(commentChannel);
+    //     };
+    // }, []);
 
 
     const getPosts = async () => {

@@ -52,7 +52,8 @@ const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = t
 
 
     //
-    const liked = likes.filter(like => like.userId === currentUser?.id)[0] ? true : false;
+    // const liked = likes.filter(like => like.userId === currentUser?.id)[0] ? true : false;
+    const liked = likes?.some(like => like.userId === currentUser?.id) || false;
     // console.log('item?.user?.image',getSupabaseFileUrl(item?.user?.image))
 
     // add liks
@@ -234,10 +235,7 @@ const PostCard = ({item, currentUser, router, hasShadow = true, showMoreIcon = t
                         </TouchableOpacity>
 
                         <Text style={styles.count}>
-                            {
-                                item?.comments[0]?.count
-
-                            }
+                            {item?.comments?.[0]?.count ?? 0}
                         </Text>
 
                     </View>
