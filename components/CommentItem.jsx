@@ -8,7 +8,7 @@ import Icon from "../assets/icons";
 
 const CommentItem = ({item,canDelete=false,onDelete=()=>{}}) => {
 
-    const createdAt=moment(item?.created_at).format('MMM d')
+    const createdAt=moment(item?.created_at).format('MMM D')
 
 const handleDelete=()=>{
     Alert.alert('Confirm', 'Are you sure you want to do this?', [

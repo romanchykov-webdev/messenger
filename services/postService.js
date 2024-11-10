@@ -85,8 +85,8 @@ export const fetchPostsDetails = async (postId) => {
                 postLikes(*),
                 comments (*, user:users(id,name,image))
             `)
-            .eq('id',postId)
-            .order('created_at', {ascending: false, foreignTabler:'comments'})
+            .eq('id', postId)
+            .order('created_at', {ascending: false, foreignTabler: 'comments'})
             .single()
 
         if (error) {
@@ -131,15 +131,15 @@ export const createPostLike = async (postLike) => {
 }
 
 //fetch remove lik to posts
-export const removePostLike = async (postId,userId) => {
+export const removePostLike = async (postId, userId) => {
 
     try {
 
-        const { error} = await supabase
+        const {error} = await supabase
             .from('postLikes')
             .delete()
-            .eq('userId',userId)
-            .eq('postId',postId)
+            .eq('userId', userId)
+            .eq('postId', postId)
 
         if (error) {
             console.log('Post like error', error);
@@ -178,6 +178,31 @@ export const createComment = async (comment) => {
     } catch (error) {
         console.log('Comment error', error);
         return {success: false, msg: 'Could not create your comment'};
+    }
+
+}
+
+//fetch remove comment to posts
+export const removeComment = async (commentId) => {
+
+    try {
+
+        const {error} = await supabase
+            .from('comments')
+            .delete()
+            .eq('id', commentId)
+
+        if (error) {
+            console.log('Remove comment error', error);
+            return {success: false, msg: 'Could not remove the comment'};
+        }
+
+        return {success: true, data: commentId}
+
+
+    } catch (error) {
+        console.log('Post like error', error);
+        return {success: false, msg: 'Could not remove the comment'};
     }
 
 }
