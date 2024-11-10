@@ -15,7 +15,7 @@ import {getUserData} from "../../services/userService";
 import {StatusBar} from "expo-status-bar";
 
 
-var limit = 0
+let limit = 0
 
 const HomeScreen = () => {
 
@@ -42,6 +42,7 @@ const HomeScreen = () => {
     // if not has posts
     const [hasMore, setHasMore] = useState(true)
 
+    // Функция для обработки событий новых постов
     const handlePostEvent = async (payload) => {
         // console.log('payload',payload)
         if (payload.eventType === 'INSERT') {
@@ -53,21 +54,60 @@ const HomeScreen = () => {
 
     }
 
-    useEffect(() => {
-
-        let postChannel = supabase
-            .channel('posts')
-            .on('postgres_changes', {event: '*', schema: 'public', table: 'posts'}, handlePostEvent)
-            .subscribe()
-
-
-        // getPosts()
-
-        return () => {
-            supabase.removeChannel(postChannel)
+    // Функция для обработки событий новых комментариев
+    const handleNewComment = (payload) => {
+        if (payload.eventType === 'INSERT') {
+            const newComment = payload.new;
+            console.log("New comment:", newComment);
+            // Здесь можно обновить интерфейс или состояние, если нужно отобразить новый комментарий
         }
+    };
 
-    }, [])
+    // useEffect(() => {
+    //
+    //     let postChannel = supabase
+    //         .channel('posts')
+    //         .on('postgres_changes', {event: '*', schema: 'public', table: 'posts'}, handlePostEvent)
+    //         .subscribe()
+    //
+    //
+    //     // getPosts()
+    //
+    //     return () => {
+    //         supabase.removeChannel(postChannel)
+    //     }
+    //
+    // }, [])
+
+    // useEffect для подписки на события новых постов и комментариев
+    useEffect(() => {
+        // Создание канала для подписки на изменения в таблице `posts`
+        const postChannel = supabase
+            .channel('posts')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'posts'
+            }, handlePostEvent)
+            .subscribe();
+
+        // Создание канала для подписки на новые комментарии в таблице `comments`
+        const commentChannel = supabase
+            .channel('comments')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'comments'
+            }, handleNewComment)
+            .subscribe();
+
+        // Удаление подписок при размонтировании компонента
+        return () => {
+            supabase.removeChannel(postChannel);
+            supabase.removeChannel(commentChannel);
+        };
+    }, []);
+
 
     const getPosts = async () => {
 

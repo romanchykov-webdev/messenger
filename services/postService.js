@@ -51,7 +51,8 @@ export const fetchPosts = async (limit = 10) => {
             .select(`
                 *,
                 user:users(id,name,image),
-                postLikes(*)
+                postLikes(*),
+                comments (count)
             `)
             .order('created_at', {ascending: false})
             .limit(limit)
@@ -67,6 +68,38 @@ export const fetchPosts = async (limit = 10) => {
     } catch (error) {
         console.log('Fetch posts error', error);
         return {success: false, msg: 'Could not fetch the post'};
+    }
+
+}
+
+//fetch posts details
+export const fetchPostsDetails = async (postId) => {
+
+    try {
+
+        const {data, error} = await supabase
+            .from('posts')
+            .select(`
+                *,
+                user:users(id,name,image),
+                postLikes(*),
+                comments (*, user:users(id,name,image))
+            `)
+            .eq('id', postId)
+            .order('created_at', {ascending: false, foreignTabler: 'comments'})
+            .single()
+
+        if (error) {
+            console.log('Fetch posts details  error', error);
+            return {success: false, msg: 'Could not fetch details the post'};
+        }
+
+        return {success: true, data: data}
+
+
+    } catch (error) {
+        console.log('Fetch posts error', error);
+        return {success: false, msg: 'Could not fetch details the post'};
     }
 
 }
@@ -98,15 +131,15 @@ export const createPostLike = async (postLike) => {
 }
 
 //fetch remove lik to posts
-export const removePostLike = async (postId,userId) => {
+export const removePostLike = async (postId, userId) => {
 
     try {
 
-        const { error} = await supabase
+        const {error} = await supabase
             .from('postLikes')
             .delete()
-            .eq('userId',userId)
-            .eq('postId',postId)
+            .eq('userId', userId)
+            .eq('postId', postId)
 
         if (error) {
             console.log('Post like error', error);
@@ -119,6 +152,57 @@ export const removePostLike = async (postId,userId) => {
     } catch (error) {
         console.log('Post like error', error);
         return {success: false, msg: 'Could not remove the post like'};
+    }
+
+}
+
+//fetch create comment to posts
+export const createComment = async (comment) => {
+
+    try {
+
+        const {data, error} = await supabase
+            .from('comments')
+            .insert(comment)
+            .select()
+            .single()
+
+        if (error) {
+            console.log('Comment error', error);
+            return {success: false, msg: 'Could not create your comment'};
+        }
+
+        return {success: true, data: data}
+
+
+    } catch (error) {
+        console.log('Comment error', error);
+        return {success: false, msg: 'Could not create your comment'};
+    }
+
+}
+
+//fetch remove comment to posts
+export const removeComment = async (commentId) => {
+
+    try {
+
+        const {error} = await supabase
+            .from('comments')
+            .delete()
+            .eq('id', commentId)
+
+        if (error) {
+            console.log('Remove comment error', error);
+            return {success: false, msg: 'Could not remove the comment'};
+        }
+
+        return {success: true, data: commentId}
+
+
+    } catch (error) {
+        console.log('Post like error', error);
+        return {success: false, msg: 'Could not remove the comment'};
     }
 
 }
