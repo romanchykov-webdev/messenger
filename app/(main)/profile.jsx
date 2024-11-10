@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Alert, Pressable, ScrollView} from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, Alert, Pressable, ScrollView, FlatList} from 'react-native';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import {useAuth} from "../../contexts/AuthContext";
 import {useRouter} from "expo-router";
@@ -10,11 +10,19 @@ import {theme} from "../../constants/theme";
 import {supabase} from "../../lib/supabase";
 import Avatar from "../../components/Avatar";
 import {StatusBar} from "expo-status-bar";
+import {fetchPosts} from "../../services/postService";
+import PostCard from "../../components/PostCard";
+import Loading from "../../components/Loading";
 
+let limit = 0
 
 const Profile = () => {
 
     const {user, setAuth} = useAuth()
+
+    //
+    const [posts, setPosts] = useState([])
+    const [hasMore, setHasMore] = useState(true)
 
     const router = useRouter();
 
@@ -27,6 +35,25 @@ const Profile = () => {
             Alert.alert('Sign out', "Error signing out!");
         }
     }
+
+
+    const getPosts = async () => {
+
+        if (!hasMore) return null;
+
+        // limit = limit + 10;
+        limit = limit + 4;
+        let res = await fetchPosts(limit, user.id)
+        // console.log('get all post limit 10:', res)
+        // console.log('user:', res.data[0].user)
+
+        if (res.success) {
+            // if no has posts
+            if (posts.length === res.data.length) setHasMore(false)
+            setPosts(res.data);
+        }
+    }
+
 
     const handleLogOut = async () => {
         //     show confirm modal
@@ -48,7 +75,37 @@ const Profile = () => {
 
     return (
         <ScreenWrapper bg="white">
-            <UserHeader user={user} router={router} handleLogOut={handleLogOut}/>
+            <FlatList
+                data={posts}
+                ListHeaderComponent={<UserHeader user={user} router={router} handleLogOut={handleLogOut}/>}
+                ListHeaderComponentStyle={{marginBottom:50}}
+                contentContainerStyle={styles.listStyle}
+                showsVerticalScrollIndicator={false}
+                keyExtractor={(item,) => item.id.toString()}
+                renderItem={({item}) => <PostCard
+                    item={item}
+                    currentUser={user}
+                    router={router}
+                />}
+                onEndReached={() => {
+                    // get 10 posts limit+10
+                    getPosts()
+                    console.log('is finish limit:', limit)
+                }}
+                onEndReachedThreshold={0.2}
+                ListFooterComponent={hasMore ? (
+                        <View style={{marginVertical: posts.length > 0 ? 100 : 30}}>
+                            <Loading/>
+                        </View>
+                    )
+                    : (
+                        <View style={{marginVertical: 30}}>
+                            <Text style={styles.noPosts}>No more posts</Text>
+                        </View>
+                    )
+                }
+            />
+
         </ScreenWrapper>
     );
 };
@@ -66,7 +123,7 @@ const UserHeader = ({user, router, handleLogOut}) => {
 
             {/* avatar   */}
             <View style={styles.container}>
-                <ScrollView contentContainerStyle={{gap:15}}>
+                <ScrollView contentContainerStyle={{gap: 15}}>
                     <StatusBar style="dark"/>
 
                     {/* avatar   */}
@@ -82,13 +139,13 @@ const UserHeader = ({user, router, handleLogOut}) => {
                     </View>
 
                     {/*    userName and address*/}
-                    <View style={{alignItems: 'center' ,gap:10 }}>
+                    <View style={{alignItems: 'center', gap: 10}}>
                         <Text style={styles.userName}>{user && user.name}</Text>
                         <Text style={styles.infoText}>{user && user.address}</Text>
                     </View>
 
                     {/*    email phone bio*/}
-                    <View style={{gap: 10, }}>
+                    <View style={{gap: 10,}}>
 
                         <View style={styles.info}>
                             <Icon name="mail" color={theme.colors.textLight} size={20}/>
@@ -178,7 +235,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(4),
         pBottom: 30,
     },
-    noPost: {
+    noPosts: {
         fontSize: hp(2),
         textAlign: "center",
         color: theme.colors.text,

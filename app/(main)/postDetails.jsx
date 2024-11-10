@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import {useLocalSearchParams, useRouter} from "expo-router";
-import {createComment, fetchPostsDetails, removeComment} from "../../services/postService";
+import {createComment, fetchPostsDetails, removeComment, removePost} from "../../services/postService";
 import {theme} from "../../constants/theme";
 import {hp, wp} from "../../helpers/common";
 import {useAuth} from "../../contexts/AuthContext";
@@ -12,6 +12,9 @@ import Icon from "../../assets/icons";
 import CommentItem from "../../components/CommentItem";
 import {supabase} from "../../lib/supabase";
 import {getUserData} from "../../services/userService";
+
+// for up input //поднимает контент при открытии клавиатуры
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 const PostDetails = () => {
 
@@ -43,12 +46,12 @@ const PostDetails = () => {
 
         if (payload.new) {
             let newComment = {...payload.new};
-            let res=await getUserData(newComment.userId);
-            newComment.user=res.success ? res.data : {};
-            setPost(prevPost=>{
-                return{
+            let res = await getUserData(newComment.userId);
+            newComment.user = res.success ? res.data : {};
+            setPost(prevPost => {
+                return {
                     ...prevPost,
-                    comments:[newComment,...prevPost.comments]
+                    comments: [newComment, ...prevPost.comments]
                 }
             })
         }
@@ -131,6 +134,32 @@ const PostDetails = () => {
         }
     }
 
+    // for delete post
+    const onDeletePost = async (item) => {
+        // console.log('delete post:',item)
+        //     delete post here
+
+        let res = await removePost(post.id)
+
+        if (res.success) {
+            router.back()
+        } else {
+            Alert.alert('Post remove', res.msg)
+        }
+
+    }
+
+
+    // for Edip post
+    const onEditPost = async (item) => {
+        // console.log(' edit post:', item)
+        //     edip post here
+        router.back()
+        router.push({
+            pathname: 'newPost',
+            params: {...item}
+        })
+    }
 
     if (startLoading) {
         return (
@@ -150,68 +179,80 @@ const PostDetails = () => {
 
 
     return (
-        <View style={styles.container}>
 
-            <ScrollView
-                keyboardDismissMode='on-drag'
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.list}
+        <View style={styles.container}>
+            <KeyboardAwareScrollView
+                //поднимает контент при открытии клавиатуры
+                contentContainerStyle={{backgroundColor: 'white'}}
+                enableOnAndroid={true}
+                extraHeight={100} // настройте высоту
             >
 
-                <PostCard
-                    item={{...post, comments: [{count: post?.comments?.length}]}}
-                    currentUser={user}
-                    router={router}
-                    hasShadow={false}
-                    showMoreIcon={false}
-                />
-                {/*    comment block*/}
-                <View style={styles.inputContainer}>
-                    <InputCustom
-                        inputRaf={inputRef}
-                        placeholder='Type comments...'
-                        onChangeText={(value) => (commentRef.current = value)}
-                        placeholderTextColor={theme.colors.textLight}
-                        containerStyle={{flex: 1, height: hp(6.3), borderRadius: theme.radius.xl}}
+                <ScrollView
+                    keyboardDismissMode='on-drag'
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.list}
+                >
+
+                    <PostCard
+                        item={{...post, comments: [{count: post?.comments?.length}]}}
+                        currentUser={user}
+                        router={router}
+                        hasShadow={false}
+                        showMoreIcon={false}
+                        showDelete={true}
+                        onDelete={onDeletePost}
+                        onEdit={onEditPost}
                     />
-                    {
-                        loading
-                            ? (
-                                <View style={styles.loading}>
-                                    <Loading size='small'/>
-                                </View>
+                    {/*    comment block*/}
+                    <View style={styles.inputContainer}>
+                        <InputCustom
+                            inputRaf={inputRef}
+                            placeholder='Type comments...'
+                            onChangeText={(value) => (commentRef.current = value)}
+                            placeholderTextColor={theme.colors.textLight}
+                            containerStyle={{flex: 1, height: hp(6.3), borderRadius: theme.radius.xl}}
+                        />
+                        {
+                            loading
+                                ? (
+                                    <View style={styles.loading}>
+                                        <Loading size='small'/>
+                                    </View>
+                                )
+                                : (
+                                    <TouchableOpacity style={styles.sedIcon} onPress={onNewComment}>
+                                        <Icon name='send' color={theme.colors.primaryDark}/>
+                                    </TouchableOpacity>
+                                )
+                        }
+
+                    </View>
+
+                    {/*    comments list*/}
+                    <View style={{marginVertical: 15, gap: 17}}>
+                        {
+                            post?.comments?.map(comment => <CommentItem
+                                key={comment?.id?.toString()}
+                                item={comment}
+                                canDelete={user.id === comment.userId || user.id === post.userId}
+                                onDelete={onDeleteComment}
+                            />)
+                        }
+                        {
+                            post?.comments?.length === 0 && (
+                                <Text style={{color: theme.colors.text, marginLeft: 5}}>
+                                    Be first to comment
+                                </Text>
                             )
-                            : (
-                                <TouchableOpacity style={styles.sedIcon} onPress={onNewComment}>
-                                    <Icon name='send' color={theme.colors.primaryDark}/>
-                                </TouchableOpacity>
-                            )
-                    }
+                        }
 
-                </View>
+                    </View>
 
-                {/*    comments list*/}
-                <View style={{marginVertical: 15, gap: 17}}>
-                    {
-                        post?.comments?.map(comment => <CommentItem
-                            key={comment?.id?.toString()}
-                            item={comment}
-                            canDelete={user.id === comment.userId || user.id === post.userId}
-                            onDelete={onDeleteComment}
-                        />)
-                    }
-                    {
-                        post?.comments?.length === 0 && (
-                            <Text style={{color: theme.colors.text, marginLeft: 5}}>
-                                Be first to comment
-                            </Text>
-                        )
-                    }
-
-                </View>
-
-            </ScrollView>
+                </ScrollView>
+            </KeyboardAwareScrollView>
         </View>
+
     );
 };
 

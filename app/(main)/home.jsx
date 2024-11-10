@@ -44,12 +44,38 @@ const HomeScreen = () => {
 
     // Функция для обработки событий новых постов
     const handlePostEvent = async (payload) => {
-        // console.log('payload',payload)
-        if (payload.eventType === 'INSERT') {
+        console.log('payload', payload)
+        if (payload.eventType === 'INSERT' && payload?.new?.id) {
             let newPost = {...payload.new};
-            let res = await getUserData((newPost.userId));
+            let res = await getUserData(newPost.userId);
+
+            newPost.postLikes = []
+            newPost.comments = [{count: 0}]
+
             newPost.user = res.success ? res.data : {}
             setPosts(prevPosts => [newPost, ...prevPosts])
+        }
+
+        if (payload.eventType === 'DELETE' && payload.old.id) {
+            setPosts(prevPosts => {
+                let updatePosts = prevPosts.filter(post => post.id != payload.old.id);
+                return updatePosts;
+            })
+        }
+
+        //     if update posts
+        if (payload.eventType === 'UPDATE' && payload?.new?.id) {
+
+            setPosts(prevPosts => {
+                let upDatePosts = prevPosts.map(post => {
+                    if (post.id === payload.new.id) {
+                        post.body = payload.new.body;
+                        post.file = payload.new.file;
+                    }
+                    return post;
+                })
+                return upDatePosts;
+            })
         }
 
     }
@@ -63,50 +89,50 @@ const HomeScreen = () => {
         }
     };
 
-    useEffect(() => {
-
-        let postChannel = supabase
-            .channel('posts')
-            .on('postgres_changes', {event: '*', schema: 'public', table: 'posts'}, handlePostEvent)
-            .subscribe()
-
-
-        // getPosts()
-
-        return () => {
-            supabase.removeChannel(postChannel)
-        }
-
-    }, [])
+    // useEffect(() => {
+    //
+    //     let postChannel = supabase
+    //         .channel('posts')
+    //         .on('postgres_changes', {event: '*', schema: 'public', table: 'posts'}, handlePostEvent)
+    //         .subscribe()
+    //
+    //
+    //     // getPosts()
+    //
+    //     return () => {
+    //         supabase.removeChannel(postChannel)
+    //     }
+    //
+    // }, [])
 
     // useEffect для подписки на события новых постов и комментариев
-    // useEffect(() => {
-    //     // Создание канала для подписки на изменения в таблице `posts`
-    //     const postChannel = supabase
-    //         .channel('posts')
-    //         .on('postgres_changes', {
-    //             event: '*',
-    //             schema: 'public',
-    //             table: 'posts'
-    //         }, handlePostEvent)
-    //         .subscribe();
-    //
-    //     // Создание канала для подписки на новые комментарии в таблице `comments`
-    //     const commentChannel = supabase
-    //         .channel('comments')
-    //         .on('postgres_changes', {
-    //             event: 'INSERT',
-    //             schema: 'public',
-    //             table: 'comments'
-    //         }, handleNewComment)
-    //         .subscribe();
-    //
-    //     // Удаление подписок при размонтировании компонента
-    //     return () => {
-    //         supabase.removeChannel(postChannel);
-    //         supabase.removeChannel(commentChannel);
-    //     };
-    // }, []);
+    useEffect(() => {
+        // Создание канала для подписки на изменения в таблице `posts`
+        const postChannel = supabase
+            .channel('posts')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'posts'
+            }, handlePostEvent)
+            .subscribe();
+
+        // Создание канала для подписки на новые комментарии в таблице `comments`
+        const commentChannel = supabase
+            .channel('comments')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'comments'
+            }, handleNewComment)
+            .subscribe();
+
+        // Удаление подписок при размонтировании компонента
+        return () => {
+            supabase.removeChannel(postChannel);
+            supabase.removeChannel(commentChannel);
+        };
+    }, []);
 
 
     const getPosts = async () => {
@@ -141,12 +167,12 @@ const HomeScreen = () => {
                     {/*icons*/}
                     <View style={styles.icons}>
                         {/*heart*/}
-                        <Pressable onPress={() => router.push('/notifications')}>
+                        <Pressable onPress={() => router.push('/notifications')} style={{marginRight: 10}}>
                             <Icon name="heart" size={hp(3.2)} strokeWidth={2} color={theme.colors.text}/>
                         </Pressable>
 
                         {/*plus*/}
-                        <Pressable onPress={() => router.push('/newPost')}>
+                        <Pressable onPress={() => router.push('/newPost')} style={{marginRight: 10}}>
                             <Icon name="plus" size={hp(3.2)} strokeWidth={2} color={theme.colors.text}/>
                         </Pressable>
 
@@ -179,17 +205,17 @@ const HomeScreen = () => {
                         console.log('is finish limit:', limit)
                     }}
                     onEndReachedThreshold={0.2}
-                    ListFooterComponent={hasMore?(
-                        <View style={{marginVertical: posts.length > 0 ? 200 : 30}}>
-                            <Loading/>
-                        </View>
-                    )
-                        :(
-                            <View style={{marginVertical:30}}>
+                    ListFooterComponent={hasMore ? (
+                            <View style={{marginVertical: posts.length > 0 ? 200 : 30}}>
+                                <Loading/>
+                            </View>
+                        )
+                        : (
+                            <View style={{marginVertical: 30}}>
                                 <Text style={styles.noPosts}>No more posts</Text>
                             </View>
                         )
-                }
+                    }
                 />
 
             </View>

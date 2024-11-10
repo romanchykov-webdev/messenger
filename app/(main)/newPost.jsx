@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable, Alert} from 'react-native';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import {theme} from "../../constants/theme";
@@ -8,7 +8,7 @@ import {useAuth} from "../../contexts/AuthContext";
 import Avatar from "../../components/Avatar";
 import {StatusBar} from "expo-status-bar";
 import RichTextEditor from "../../components/RichTextEditor";
-import {useRouter} from "expo-router";
+import {useLocalSearchParams, useRouter} from "expo-router";
 import Icon from "../../assets/icons";
 import ButtonCustom from "../../components/ButtonCustom";
 import * as ImagePicker from "expo-image-picker";
@@ -20,6 +20,8 @@ import {createOrUpdatePost} from "../../services/postService";
 
 
 const NewPost = () => {
+    const post = useLocalSearchParams();
+
 
     const {user} = useAuth()
 
@@ -30,6 +32,25 @@ const NewPost = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [file, setFile] = useState(file)
+
+
+    // if came to the edip post
+
+    useEffect(() => {
+        if (post && post.id) {
+            bodyRef.current = post.body;
+            setFile(post.file || null);
+
+            setTimeout(() => {
+
+                editorRef?.current?.setContentHTML(post.body);
+            }, 300)
+
+        }
+
+    }, [])
+    // if came to the edip post
+
 
     const onPick = async (isImage) => {
 
@@ -70,9 +91,14 @@ const NewPost = () => {
         }
 
         //     check image or video for remote file
-        if (file.include('postImages')) {
-            return 'image'
+        // if (file.include('postImages')) {
+        //     return 'image'
+        // }
+        // Проверка на наличие строки и использование метода include
+        if (typeof file === 'string' && file.includes('postImages')) {
+            return 'image';
         }
+
 
         return 'video'
 
@@ -81,12 +107,20 @@ const NewPost = () => {
     // get file uri
     const getFileUri = file => {
         if (!file) return null;
+
+        // Проверяем, локальный файл или нет
         if (isLocalFile(file)) {
             return file.uri;
         }
 
+        // const uri = getSupabaseFileUrl(file)?.uri;
+        // console.log('Generated file URI:', uri);
         //     if file not local
-        return getSupabaseFileUrl(file)?.uri;
+        // return getSupabaseFileUrl(file)?.uri;
+        // Если файл не локальный, генерируем полный URL
+        const uri = getSupabaseFileUrl(file);
+        // console.log('Generated file URI:', uri);
+        return uri;
 
     }
 
@@ -106,13 +140,16 @@ const NewPost = () => {
             userId: user?.id,
         }
 
+        // if update post
+        if (post && post.id) data.id = post.id;
+
         //     create post
 
         setLoading(true)
         let res = await createOrUpdatePost(data)
         setLoading(false)
 
-        console.log('post res:', res)
+        // console.log('post res:', res)
 
         if (res.success) {
             setFile(null)
@@ -125,7 +162,7 @@ const NewPost = () => {
 
     }
 
-    console.log('file uri',getFileUri(file));
+    // console.log('file uri', getFileUri(file));
     return (
         <ScreenWrapper bg='white'>
             <View style={styles.container}>
@@ -221,7 +258,7 @@ const NewPost = () => {
 
                 </ScrollView>
                 <ButtonCustom
-                    title='Post'
+                    title={post && post.id ? 'Update' : 'Post'}
                     buttonStyle={{height: hp(6.2)}}
                     loading={loading}
                     hasShadow={false}
