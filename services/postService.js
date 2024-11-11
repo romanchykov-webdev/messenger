@@ -53,7 +53,7 @@ export const fetchPosts = async (limit = 10,userId) => {
                 *,
                 user:users(id,name,image),
                 postLikes(*),
-                comments (count)
+                comments (count),
             `)
                .order('created_at', {ascending: false})
                .eq('userId',userId)

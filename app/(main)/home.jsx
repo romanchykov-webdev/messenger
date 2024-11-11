@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Pressable, FlatList} from 'react-native';
+import {View, Text, StyleSheet, Pressable, FlatList, RefreshControl} from 'react-native';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import {useAuth} from "../../contexts/AuthContext";
 import {hp, wp} from "../../helpers/common";
@@ -23,6 +23,10 @@ const HomeScreen = () => {
 
     const {user, setAuth} = useAuth();
 
+    //  for refreshing
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    //  for refreshing
+
     // console.log('user', user);
 
     // const onLogOut = async () => {
@@ -42,9 +46,12 @@ const HomeScreen = () => {
     // if not has posts
     const [hasMore, setHasMore] = useState(true)
 
+    // count notifications
+    const [notificationCount, setNotificationCount] = useState(0)
+
     // Функция для обработки событий новых постов
     const handlePostEvent = async (payload) => {
-        console.log('payload', payload)
+        // console.log('payload', payload)
         if (payload.eventType === 'INSERT' && payload?.new?.id) {
             let newPost = {...payload.new};
             let res = await getUserData(newPost.userId);
@@ -81,13 +88,86 @@ const HomeScreen = () => {
     }
 
     // Функция для обработки событий новых комментариев
-    const handleNewComment = (payload) => {
+    const handleNewComment = async (payload) => {
         if (payload.eventType === 'INSERT') {
             const newComment = payload.new;
-            console.log("New comment:", newComment);
-            // Здесь можно обновить интерфейс или состояние, если нужно отобразить новый комментарий
+            // console.log("New comment:", newComment);
+
+            // Обновляем количество комментариев для соответствующего поста
+            setPosts(prevPosts => {
+                return prevPosts.map(post => {
+                    if (post.id === newComment.postId) {
+                        // Увеличиваем количество комментариев на 1
+                        return {
+                            ...post,
+                            comments: [{ count: (post.comments[0].count || 0) + 1 }]
+                        };
+                    }
+                    return post;
+                });
+            });
         }
     };
+
+    // Функция для обработки событий новых лайков
+    // console.log('post',posts)
+
+
+    // console.log('posts',posts[1].postLikes)
+    // Функция для обработки новых лайков
+    const handleNewLike = (payload) => {
+        // console.log('Received payload:', payload);  // Лог для диагностики
+
+        if (payload.eventType === 'INSERT') {
+            const newLike = payload.new;
+            // console.log('New like:', newLike);  // Лог для новых лайков
+
+            setPosts(prevPosts => {
+                return prevPosts.map(post => {
+                    if (post.id === newLike.postId) {
+                        return {
+                            ...post,
+                            postLikes: [...post.postLikes, newLike]
+                        };
+                    }
+                    return post;
+                });
+            });
+        } else if (payload.eventType === 'DELETE') {
+            const removedLike = payload.old;
+            // console.log('Removed like:', removedLike);  // Лог для удаленных лайков
+
+            setPosts(prevPosts => {
+                return prevPosts.map(post => {
+                    if (post.id === removedLike.postId) {
+                        return {
+                            ...post,
+                            postLikes: post.postLikes.filter(like => like.id !== removedLike.id)
+                        };
+                    }
+                    return post;
+                });
+            });
+        }
+    };
+
+
+
+
+
+
+    // Функция для обработки событий новых notifications
+    const handleNewNotification = async (payload) => {
+        // console.log('got new natification', payload)
+        if (payload.eventType === 'INSERT' && payload?.new?.id) {
+            setNotificationCount(prev => prev + 1)
+            //     const newComment = payload.new;
+            //     console.log("New comment:", newComment);
+            //     // Здесь можно обновить интерфейс или состояние, если нужно отобразить новый notifications
+        }
+    };
+
+
 
     // useEffect(() => {
     //
@@ -127,10 +207,35 @@ const HomeScreen = () => {
             }, handleNewComment)
             .subscribe();
 
+        // Подписка на события новых postLikes
+        const likesChannel = supabase
+            .channel('postLikes')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'postLikes'
+            }, handleNewLike)
+            .subscribe();
+
+
+
+        // для подписки на изменения в таблице `notifications`
+        const notificationsChannel = supabase
+            .channel('notifications')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'notifications',
+                filter: `receiverId=eq.${user.id}`
+            }, handleNewNotification)
+            .subscribe();
+
         // Удаление подписок при размонтировании компонента
         return () => {
             supabase.removeChannel(postChannel);
             supabase.removeChannel(commentChannel);
+            supabase.removeChannel(likesChannel);
+            supabase.removeChannel(notificationsChannel);
         };
     }, []);
 
@@ -152,7 +257,29 @@ const HomeScreen = () => {
         }
     }
 
+    const handlerNotification = () => {
+        setNotificationCount(0)
+        router.push('/notifications')
+    }
     // console.log('posts',posts)
+
+
+    // Функция для обновления постов
+    const onRefresh = async () => {
+        setIsRefreshing(true);
+        limit = 4; // Сброс лимита для загрузки первых постов
+        const res = await fetchPosts(limit);
+        if (res.success) {
+            // console.log('refresh')
+            // console.log('refreshqc', res.data[0])
+            setPosts([]);
+            setHasMore(true);
+        }
+        setIsRefreshing(false);
+    };
+
+
+
     return (
         <ScreenWrapper bg='white'>
             <View style={styles.container}>
@@ -167,8 +294,17 @@ const HomeScreen = () => {
                     {/*icons*/}
                     <View style={styles.icons}>
                         {/*heart*/}
-                        <Pressable onPress={() => router.push('/notifications')} style={{marginRight: 10}}>
+                        <Pressable onPress={handlerNotification} style={{marginRight: 10}}>
                             <Icon name="heart" size={hp(3.2)} strokeWidth={2} color={theme.colors.text}/>
+                            {
+                                notificationCount > 0 && (
+                                    <View style={styles.pill}>
+                                        <Text style={styles.pillText}>
+                                            {notificationCount}
+                                        </Text>
+                                    </View>
+                                )
+                            }
                         </Pressable>
 
                         {/*plus*/}
@@ -202,7 +338,7 @@ const HomeScreen = () => {
                     onEndReached={() => {
                         // get 10 posts limit+10
                         getPosts()
-                        console.log('is finish limit:', limit)
+                        // console.log('is finish limit:', limit)
                     }}
                     onEndReachedThreshold={0.2}
                     ListFooterComponent={hasMore ? (
@@ -215,6 +351,14 @@ const HomeScreen = () => {
                                 <Text style={styles.noPosts}>No more posts</Text>
                             </View>
                         )
+                    }
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={isRefreshing}
+                            onRefresh={onRefresh}
+                            colors={[theme.colors.primary]} // Цвет индикатора для Android
+                            tintColor={theme.colors.primary} // Цвет индикатора для iOS
+                        />
                     }
                 />
 
@@ -268,6 +412,17 @@ const styles = StyleSheet.create({
         position: 'absolute',
         right: -10,
         top: -4,
+        height: hp(2.2),
+        width: hp(2.2),
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 20,
+        backgroundColor: theme.colors.roseLight,
+    },
+    pillText: {
+        color: 'white',
+        fontSize: hp(1.2),
+        fontWeight: theme.fonts.bold
     }
 })
 

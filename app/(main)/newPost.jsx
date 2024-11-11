@@ -127,8 +127,8 @@ const NewPost = () => {
     // on submit
     const onSubmit = async () => {
 
-        console.log('body', bodyRef.current)
-        console.log('file', file)
+        // console.log('body', bodyRef.current)
+        // console.log('file', file)
 
         if (!bodyRef.current && !file) {
             Alert.alert('Post', 'Pleas choose an image or add post body')

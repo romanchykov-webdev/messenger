@@ -1,14 +1,20 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Alert} from 'react-native';
 import {theme} from "../constants/theme";
-import {hp} from "../helpers/common";
+import {formatDate, formatTime, hp} from "../helpers/common";
 import Avatar from "./Avatar";
-import moment from "moment";
 import Icon from "../assets/icons";
 
-const CommentItem = ({item,canDelete=false,onDelete=()=>{}}) => {
+const CommentItem = ({
+                         item,
+                         canDelete=false,
+                         onDelete=()=>{},
+                         highlight=false
+}) => {
 
-    const createdAt=moment(item?.created_at).format('MMM D')
+    // const createdAt=moment(item?.created_at).format('MMM D')
+
+    // console.log('highlight',highlight)
 
 const handleDelete=()=>{
     Alert.alert('Confirm', 'Are you sure you want to do this?', [
@@ -26,18 +32,20 @@ const handleDelete=()=>{
 }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container]}>
         {/*    avatar*/}
             <Avatar uri={item?.user?.image}/>
 
         {/*    content*/}
-            <View style={styles.content}>
+            <View style={[styles.content,highlight && styles.highlight]}>
 
                 <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
                     <View style={styles.nameContainer}>
                         <Text style={styles.text}>{item?.user?.name}</Text>
+                        <Text >*</Text>
+                        <Text style={[styles.text,{color:theme.colors.textLight}]}>{formatDate(item?.created_at)}</Text>
                         <Text>*</Text>
-                        <Text style={[styles.text,{color:theme.colors.textLight}]}>{createdAt}</Text>
+                        <Text style={[styles.text,{color:theme.colors.textLight}]}>{formatTime(item?.created_at)}</Text>
                     </View>
 
                     {
@@ -73,7 +81,7 @@ const styles = StyleSheet.create({
         borderCurve: 'continuous',
     },
     highlight: {
-        borderWidth: 0.2,
+        // borderWidth: 0.2,
         backgroundColor: 'white',
         borderColor: theme.colors.dark,
         shadowColor: theme.colors.dark,
@@ -86,6 +94,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 3,
+
     },
     text: {
         fontSize: hp(1.6),
